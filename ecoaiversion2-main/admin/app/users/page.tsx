@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -39,7 +40,11 @@ export default function UsersPage() {
           <tbody className="divide-y">
             {users.map((user: any) => (
               <tr key={user.id}>
-                <td className="px-6 py-4">{user.name}</td>
+                <td className="px-6 py-4">
+                  <Link href={`/users/${user.id}`} className="text-blue-600 hover:underline">
+                    {user.name}
+                  </Link>
+                </td>
                 <td className="px-6 py-4">{user.email}</td>
                 <td className="px-6 py-4">{user.points}</td>
                 <td className="px-6 py-4">{user.tier}</td>

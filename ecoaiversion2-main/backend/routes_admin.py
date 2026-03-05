@@ -1,7 +1,12 @@
 from fastapi import APIRouter, HTTPException
 from database import supabase
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+class CoinsUpdate(BaseModel):
+    weight: float
+    coins: int
 
 @router.get("/stats")
 async def get_stats():
@@ -20,6 +25,18 @@ async def get_stats():
         "totalPoints": total_points
     }
 
+@router.get("/users/{user_id}")
+async def get_user(user_id: str):
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Database connection unavailable")
+    try:
+        result = supabase.table("users").select("*").eq("id", user_id).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        return result.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
 @router.get("/users")
 async def get_all_users():
     if not supabase:
@@ -29,6 +46,19 @@ async def get_all_users():
         return result.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+@router.put("/users/{user_id}/coins")
+async def update_user_coins(user_id: str, data: CoinsUpdate):
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Database connection unavailable")
+    
+    user = supabase.table("users").select("points").eq("id", user_id).execute()
+    if not user.data:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    new_points = user.data[0]["points"] + data.coins
+    result = supabase.table("users").update({"points": new_points}).eq("id", user_id).execute()
+    return {"success": True, "data": result.data}
 
 @router.get("/orders")
 async def get_all_orders():

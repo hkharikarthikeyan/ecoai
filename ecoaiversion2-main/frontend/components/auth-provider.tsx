@@ -35,7 +35,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function loadUserFromAPI() {
       try {
-        setUser(null)
+        const token = localStorage.getItem("token")
+        if (token) {
+          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+          const res = await fetch(`${API_URL}/auth/me?token=${token}`)
+          if (res.ok) {
+            const data = await res.json()
+            setUser(data)
+          } else {
+            localStorage.removeItem("token")
+            setUser(null)
+          }
+        } else {
+          setUser(null)
+        }
       } catch (error) {
         console.error("Error loading user:", error)
         setUser(null)
@@ -70,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.success) {
         setUser(data.user)
+        localStorage.setItem("token", data.token)
         return { success: true }
       } else {
         return { success: false, message: data.message }
@@ -83,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Logout function
   const logout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" })
+      localStorage.removeItem("token")
       setUser(null)
       router.push("/")
     } catch (error) {
@@ -107,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.success) {
         setUser(data.user)
+        localStorage.setItem("token", data.token)
         return { success: true }
       } else {
         return { success: false, message: data.message }

@@ -61,9 +61,10 @@ export default function CartPage() {
     if (user) {
       const fetchData = async () => {
         try {
+          const token = localStorage.getItem("token")
           const [cartRes, userRes] = await Promise.all([
             fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/${user.id}`),
-            fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me?token=${localStorage.getItem("token")}`)
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me?token=${token}`)
           ])
           
           if (cartRes.ok) {
@@ -73,7 +74,8 @@ export default function CartPage() {
           
           if (userRes.ok) {
             const userData = await userRes.json()
-            setUserPoints(userData.points)
+            console.log('User data:', userData)
+            setUserPoints(userData.points || 0)
           }
         } catch (error) {
           console.error("Failed to fetch data:", error)
